@@ -7,11 +7,11 @@
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageOutputPath>pack</PackageOutputPath>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
     <AssemblyName>libzbar.net</AssemblyName>
     <AssemblyTitle>libzbar.net</AssemblyTitle>
     <Authors>Carter Canedy, Jonas Jensen, Jeff Brown</Authors>
-    <Version>1.0.0.0</Version>
+    <Version>$(AssemblyVersion)</Version>
     <LangVersion>11</LangVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
