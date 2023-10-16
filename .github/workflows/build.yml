@@ -32,4 +32,4 @@ jobs:
     - name: Push
 
       run: |
-        dotnet nuget push libzbarnet/pack/*.nupkg
+        dotnet nuget push libzbarnet/pack/*.nupkg -Source https://api.nuget.org/v3/index.json
