@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <ProjectName>libzbar.net</ProjectName>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageOutputPath>pack</PackageOutputPath>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
     <AssemblyName>libzbar.net</AssemblyName>
     <AssemblyTitle>libzbar.net</AssemblyTitle>
     <Authors>Carter Canedy, Jonas Jensen, Jeff Brown</Authors>
