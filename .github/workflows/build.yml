@@ -30,4 +30,4 @@ jobs:
         
     - name: Push
       run: |
-        dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ build.NUGET_GITHUB_TOKEN }}
+        dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_GITHUB_TOKEN }}
