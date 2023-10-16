@@ -30,6 +30,5 @@ jobs:
         dotnet build --configuration Release libzbarnet/libzbarnet.csproj
         dotnet pack --configuration Release libzbarnet/libzbarnet.csproj
     - name: Push
-
       run: |
-        dotnet nuget push libzbarnet/pack/*.nupkg --source https://api.nuget.org/v3/index.json
+        dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json
