@@ -29,5 +29,4 @@ jobs:
         dotnet pack --configuration Release libzbarnet/libzbarnet.csproj
     - name: Push
       run: |
-        dotnet nuget setApiKey ${{ secrets.NUGET_GITHUB_TOKEN }}
-        dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json
+        dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_GITHUB_TOKEN }}
