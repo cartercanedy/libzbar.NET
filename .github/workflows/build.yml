@@ -25,4 +25,5 @@ jobs:
         dotnet restore libzbarnet/libzbarnet.csproj
     - name: Build NuGet package
       run: |
-        dotnet pack libzbarnet/libzbarnet.csproj
+        dotnet build --Configuration Release libzbarnet/libzbarnet.csproj
+        dotnet pack --Configuration Release libzbarnet/libzbarnet.csproj
