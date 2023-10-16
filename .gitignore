@@ -1,3 +1,5 @@
 *
 !.gitignore
 !libzbarnet
+!LICENSE
+!README.md
