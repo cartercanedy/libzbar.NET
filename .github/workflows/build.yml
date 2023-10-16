@@ -18,8 +18,6 @@ jobs:
     - uses: actions/checkout@v3
     - name: Setup .NET env
       uses: actions/setup-dotnet@v3
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_GITHUB_TOKEN }}
       with:
         dotnet-version: 7.0.x
     - name: Restore
@@ -30,6 +28,5 @@ jobs:
         dotnet build --configuration Release libzbarnet/libzbarnet.csproj
         dotnet pack --configuration Release libzbarnet/libzbarnet.csproj
     - name: Push
-
       run: |
-        dotnet nuget push libzbarnet/pack/*.nupkg
+        dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_GITHUB_TOKEN }}
