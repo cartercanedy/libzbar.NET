@@ -1,9 +1,7 @@
 libzbar.NET
 ==========
 
-libzbar.NET is a .NET Standard 2.1 wrapper. [documentation](http://jonasfj.github.io/libzbar.NET/) can be found below:
-
-*   [Documentation](http://jonasfj.github.io/libzbar.NET/)
+libzbar.NET is a .NET Standard 2.1 wrapper. Documentation can be found [here](http://jonasfj.github.io/libzbar.NET/).
 
 libzbar.NET is released under GNU LGPL version 2.1, or (at your discretion) any later version.
 
