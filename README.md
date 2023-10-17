@@ -21,7 +21,7 @@ Assuming that you have Visual Studio installed along with the .NET Standard 2.0 
 libzbar.NET is released under GNU LGPL version 2.1, or (at your discretion) any later version.
 
 ## Authors
-_libzbar.NET is a derivative project, with the source project being authored by Jonas Finnemann Jensen et. al. This is a list of authors that have directly contributed:_
+_libzbar.NET is a derivative project, with the source project being authored by Jonas Finnemann Jensen et al. This is a list of authors that have directly contributed:_
 
 *   Carter Canedy
 *   Jonas Finnemann Jensen
