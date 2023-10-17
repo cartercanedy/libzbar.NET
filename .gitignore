@@ -1,5 +1,7 @@
 *
 !.gitignore
-!libzbarnet
+!libzbar.net
+!libzbar.net/*
+!libzbarnet.sln
 !LICENSE
 !README.md

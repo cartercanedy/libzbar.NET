@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libzbarnet", "libzbar.net\libzbarnet.csproj", "{44CACD27-35CC-427C-A67F-97DBD81226EB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZBarRefTest", "ZBarRefTest\ZBarRefTest.csproj", "{35B761F6-AAE9-4195-9B49-8AE0631139AA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{44CACD27-35CC-427C-A67F-97DBD81226EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44CACD27-35CC-427C-A67F-97DBD81226EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44CACD27-35CC-427C-A67F-97DBD81226EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44CACD27-35CC-427C-A67F-97DBD81226EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35B761F6-AAE9-4195-9B49-8AE0631139AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35B761F6-AAE9-4195-9B49-8AE0631139AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35B761F6-AAE9-4195-9B49-8AE0631139AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35B761F6-AAE9-4195-9B49-8AE0631139AA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {69A43E25-26FC-4723-B4AD-5111AF8E72C9}
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = example\image-scanner\image-scanner.csproj
+	EndGlobalSection
+EndGlobal

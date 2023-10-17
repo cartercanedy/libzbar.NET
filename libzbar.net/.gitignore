@@ -1,6 +1,7 @@
-!*
 !Interop
 !Interop/*
+!Internal
+!Internal/*
 pack
 bin
 obj
