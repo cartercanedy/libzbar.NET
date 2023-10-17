@@ -7,7 +7,7 @@
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageOutputPath>pack</PackageOutputPath>
-    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <AssemblyVersion>1.0.5.0</AssemblyVersion>
     <AssemblyName>libzbar.net</AssemblyName>
     <AssemblyTitle>libzbar.net</AssemblyTitle>
     <Authors>Carter Canedy, Jonas Jensen, Jeff Brown</Authors>
@@ -16,6 +16,9 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageTags>libzbar;zbar;barcode scanner;barcode</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Description>
+      A .NET Standard 2.0 wrapper around libzbar.
+    </Description>
   </PropertyGroup>
 
   <ItemGroup>
