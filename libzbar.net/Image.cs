@@ -33,9 +33,20 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using static ZBar.Interop.NativeFunctions;
+using static ZBar.Internal.ImageUtils;
 
 namespace ZBar
 {
+  /// <summary>
+  /// The available formats for conversions from <see cref="Image"/> to <see cref="Bitmap"/>.
+  /// </summary>
+  public enum SupportedBitmapFormat
+  {
+    RGB3 = 0,
+    RGB4,
+  }
+
   /// <summary>
   /// Representation of an image in ZBar
   /// </summary>
@@ -45,6 +56,15 @@ namespace ZBar
     private uint _width;
     private uint _height;
 
+    private void SetData(byte[] data)
+    {
+      IntPtr lData = Marshal.AllocHGlobal(data.Length);
+
+      Marshal.Copy(data, 0, lData, data.Length);
+
+      zbar_image_set_data(_handle, lData, (uint)data.Length, ReleaseAllocatedUnmanagedMemory);
+    }
+
     /// <summary>
     /// Create a new image from an unmanaged object reference
     /// </summary>
@@ -52,20 +72,11 @@ namespace ZBar
     /// <param name="ptr">
     /// A <see cref="IntPtr"/> to unmananged ZBar image.
     /// </param>
-    /// <param name="incrementRefCount">
-    /// Whether or not to increment the reference counter.
-    /// </param>
-    internal Image(IntPtr ptr, bool incrementRefCount)
+    internal Image(IntPtr ptr)
     {
       if (ptr == IntPtr.Zero)
       {
         throw new Exception($"{nameof(Image)} error: Passed a nullptr into ctor.");
-      }
-
-      //If we must increment the reference counter here
-      if (incrementRefCount)
-      {
-        zbar_image_ref(ptr, 1);
       }
 
       _handle = ptr;
@@ -122,7 +133,7 @@ namespace ZBar
       }
 
       //Set the data
-      Data = data;
+      SetData(data);
       Width = (uint)image.Width;
       Height = (uint)image.Height;
       Format = FourCC('R', 'G', 'B', '3');
@@ -135,27 +146,42 @@ namespace ZBar
 
     #region Wrapper methods
 
+
     /// <summary>
-    /// Get a new <see cref="Bitmap"/> containing the a copy of the current image, converted to the FourCC RGB3 format.
+    /// Get a new <see cref="Bitmap"/> containing the a copy of the current image with the pixel format specified with <paramref name="pixelFormat"/>.
     /// </summary>
+    /// <param name="pixelFormat">The pixel format to use for the <see cref="Bitmap"/> conversion.</param>
     /// <returns>
     /// A <see cref="Bitmap"/> copy of this image
     /// </returns>
-    public Bitmap ToBitmap()
+    public Bitmap ToBitmap(SupportedBitmapFormat pixelFormat)
     {
-      Bitmap img = new Bitmap((int)Width, (int)Height, PixelFormat.Format24bppRgb);
+      Bitmap lBmp = new Bitmap((int)_width, (int)_height, PixelFormat.Format24bppRgb);
+      BitmapData lBmpData = lBmp.LockBits(new(0, 0, lBmp.Width, lBmp.Height), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
       //TODO: Test and optimize this :)
-      using (Image rgb = Convert(FourCC('R', 'G', 'B', '3')))
-      {
-        byte[] data = rgb.Data;
-        BitmapData bdata = img.LockBits(new Rectangle(0, 0, img.Width, img.Height),
-                                        ImageLockMode.WriteOnly,
-                                        PixelFormat.Format24bppRgb);
-        Marshal.Copy(data, 0, bdata.Scan0, data.Length);
-        img.UnlockBits(bdata);
-      }
 
-      return img;
+      uint l4CC = pixelFormat switch
+      {
+        SupportedBitmapFormat.RGB3 => FourCC('R', 'G', 'B', '3'),
+        SupportedBitmapFormat.RGB4 => FourCC('R', 'G', 'B', '3'),
+        _ => throw new Exception()
+      };
+
+      IntPtr pNewImage = ConvertZBarImage(_handle, l4CC);
+      IntPtr pNewImageData = zbar_image_get_data(pNewImage);
+
+      int lNewImageDataLen = (int)zbar_image_get_data_length(pNewImage);
+
+      byte[] lNewImageData = new byte[lNewImageDataLen];
+
+      Marshal.Copy(pNewImageData, lNewImageData, 0, lNewImageDataLen);
+      Marshal.Copy(lNewImageData, 0, lBmpData.Scan0, lNewImageDataLen);
+
+      zbar_image_destroy(pNewImage);
+
+      lBmp.UnlockBits(lBmpData);
+
+      return lBmp;
     }
 
     /// <value>
@@ -200,10 +226,27 @@ namespace ZBar
       set => zbar_image_set_sequence(_handle, value);
     }
 
+    public Span<byte> GetData()
+    {
+      if (_handle == IntPtr.Zero) throw new NullReferenceException($"{typeof(Image).FullName} exception: image ptr was null");
+      IntPtr pData = zbar_image_get_data(_handle);
+
+      if (pData == IntPtr.Zero) throw new ZBarException(_handle);
+
+      int lDataLength = (int)zbar_image_get_data_length(_handle);
+
+      byte[] lData = new byte[lDataLength];
+
+      Marshal.Copy(pData, lData, 0, lDataLength);
+
+      return lData;
+    }
+
     /// <value>
     /// Get/set the data associated with this image
     /// </value>
     /// <remarks>This method copies that data, using Marshal.Copy.</remarks>
+    [Obsolete($"Getting/setting data via Image.{nameof(Data)} property is deprecated, use Image.{nameof(GetData)} instead", false)]
     public byte[] Data
     {
       get
@@ -220,20 +263,18 @@ namespace ZBar
       {
         IntPtr data = Marshal.AllocHGlobal(value.Length);
         Marshal.Copy(value, 0, data, value.Length);
-        zbar_image_set_data(_handle, data, (uint)value.Length, CleanupHandler);
+        zbar_image_set_data(_handle, data, (uint)value.Length, ReleaseAllocatedUnmanagedMemory);
       }
     }
-
-    /// <summary>
-    /// Cleanup handler, by holding the reference statically the delegate won't be released
-    /// </summary>
-    private static zbar_image_cleanup_handler CleanupHandler = new zbar_image_cleanup_handler(ReleaseAllocatedUnmanagedMemory);
 
     private static void ReleaseAllocatedUnmanagedMemory(IntPtr image)
     {
       IntPtr pData = zbar_image_get_data(image);
+
       if (pData != IntPtr.Zero)
+      {
         Marshal.FreeHGlobal(pData);
+      }
     }
 
     /// <value>
@@ -271,20 +312,7 @@ namespace ZBar
       IntPtr img = zbar_image_convert(_handle, format);
       if (img == IntPtr.Zero)
         throw new ZBarException(_handle);
-      return new Image(img, false);
-    }
-
-    /// <summary>
-    /// Get FourCC code from four chars
-    /// </summary>
-    /// <remarks>
-    /// See FourCC.org for more information on FourCC.
-    /// For information on format supported by zbar see:
-    /// http://sourceforge.net/apps/mediawiki/zbar/index.php?title=Supported_image_formats
-    /// </remarks>
-    public static uint FourCC(char c0, char c1, char c2, char c3)
-    {
-      return (uint)c0 | ((uint)c1) << 8 | ((uint)c2) << 16 | ((uint)c3) << 24;
+      return new Image(img);
     }
 
     #endregion
@@ -332,157 +360,6 @@ namespace ZBar
       //these are release and they may already be finalized.
       this.Dispose(false);
     }
-    #endregion
-
-    #region Extern C functions
-    /// <summary>new image constructor.
-    /// </summary>
-    /// <returns>
-    /// a new image object with uninitialized data and format.
-    /// this image should be destroyed (using zbar_image_destroy()) as
-    /// soon as the application is finished with it
-    /// </returns>
-    [DllImport("libzbar")]
-    private static extern IntPtr zbar_image_create();
-
-    /// <summary>image destructor.  all images created by or returned to the
-    /// application should be destroyed using this function.  when an image
-    /// is destroyed, the associated data cleanup handler will be invoked
-    /// if available
-    /// </summary><remarks>
-    /// make no assumptions about the image or the data buffer.
-    /// they may not be destroyed/cleaned immediately if the library
-    /// is still using them.  if necessary, use the cleanup handler hook
-    /// to keep track of image data buffers
-    /// </remarks>
-    [DllImport("libzbar")]
-    private static extern void zbar_image_destroy(IntPtr image);
-
-    /// <summary>image reference count manipulation.
-    /// increment the reference count when you store a new reference to the
-    /// image.  decrement when the reference is no longer used.  do not
-    /// refer to the image any longer once the count is decremented.
-    /// zbar_image_ref(image, -1) is the same as zbar_image_destroy(image)
-    /// </summary>
-    [DllImport("libzbar")]
-    private static extern void zbar_image_ref(IntPtr image, int refs);
-
-    /// <summary>image format conversion.  refer to the documentation for supported
-    /// image formats
-    /// </summary>
-    /// <returns> a new image with the sample data from the original image
-    /// converted to the requested format.  the original image is
-    /// unaffected.
-    /// </returns>
-    /// <remarks> the converted image size may be rounded (up) due to format
-    /// constraints
-    /// </remarks>
-    [DllImport("libzbar")]
-    private static extern IntPtr zbar_image_convert(IntPtr image, uint format);
-
-    /// <summary>image format conversion with crop/pad.
-    /// if the requested size is larger than the image, the last row/column
-    /// are duplicated to cover the difference.  if the requested size is
-    /// smaller than the image, the extra rows/columns are dropped from the
-    /// right/bottom.
-    /// </summary>
-    /// <returns> a new image with the sample data from the original
-    /// image converted to the requested format and size.
-    /// </returns>
-    /// <remarks>the image is not scaled</remarks>
-    [DllImport("libzbar")]
-    private static extern IntPtr zbar_image_convert_resize(IntPtr image, uint format, uint width, uint height);
-
-    /// <summary>retrieve the image format.
-    /// </summary>
-    /// <returns> the fourcc describing the format of the image sample data</returns>
-    [DllImport("libzbar")]
-    private static extern uint zbar_image_get_format(IntPtr image);
-
-    /// <summary>retrieve a "sequence" (page/frame) number associated with this image.
-    /// </summary>
-    [DllImport("libzbar")]
-    private static extern uint zbar_image_get_sequence(IntPtr image);
-
-    /// <summary>retrieve the width of the image.
-    /// </summary>
-    /// <returns> the width in sample columns</returns>
-    [DllImport("libzbar")]
-    private static extern uint zbar_image_get_width(IntPtr image);
-
-    /// <summary>retrieve the height of the image.
-    /// </summary>
-    /// <returns> the height in sample rows</returns>
-    [DllImport("libzbar")]
-    private static extern uint zbar_image_get_height(IntPtr image);
-
-    /// <summary>return the image sample data.  the returned data buffer is only
-    /// valid until zbar_image_destroy() is called
-    /// </summary>
-    [DllImport("libzbar")]
-    private static extern IntPtr zbar_image_get_data(IntPtr image);
-
-    /// <summary>return the size of image data.
-    /// </summary>
-    [DllImport("libzbar")]
-    private static extern uint zbar_image_get_data_length(IntPtr img);
-
-    /// <summary>image_scanner decode result iterator.
-    /// </summary>
-    /// <returns> the first decoded symbol result for an image
-    /// or NULL if no results are available
-    /// </returns>
-    [DllImport("libzbar")]
-    private static extern IntPtr zbar_image_first_symbol(IntPtr image);
-
-    /// <summary>specify the fourcc image format code for image sample data.
-    /// refer to the documentation for supported formats.
-    /// </summary>
-    /// <remarks> this does not convert the data!
-    /// (see zbar_image_convert() for that)
-    /// </remarks>
-    [DllImport("libzbar")]
-    private static extern void zbar_image_set_format(IntPtr image, uint format);
-
-    /// <summary>associate a "sequence" (page/frame) number with this image.
-    /// </summary>
-    [DllImport("libzbar")]
-    private static extern void zbar_image_set_sequence(IntPtr image, uint sequence_num);
-
-    /// <summary>specify the pixel size of the image.
-    /// </summary>
-    /// <remarks>this does not affect the data!</remarks>
-    [DllImport("libzbar")]
-    private static extern void zbar_image_set_size(IntPtr image, uint width, uint height);
-
-    /// <summary>
-    /// Cleanup handler callback for image data.
-    /// </summary>
-    private delegate void zbar_image_cleanup_handler(IntPtr image);
-
-    /// <summary>specify image sample data.  when image data is no longer needed by
-    /// the library the specific data cleanup handler will be called
-    /// (unless NULL)
-    /// </summary>
-    /// <remarks>application image data will not be modified by the library</remarks>
-    [DllImport("libzbar")]
-    private static extern void zbar_image_set_data(IntPtr image, IntPtr data, uint data_byte_length, zbar_image_cleanup_handler cleanup_handler);
-
-    /// <summary>built-in cleanup handler.
-    /// passes the image data buffer to free()
-    /// </summary>
-    [DllImport("libzbar")]
-    private static extern void zbar_image_free_data(IntPtr image);
-
-    /// <summary>associate user specified data value with an image.
-    /// </summary>
-    [DllImport("libzbar")]
-    private static extern void zbar_image_set_userdata(IntPtr image, IntPtr userdata);
-
-    /// <summary>return user specified data value associated with the image.
-    /// </summary>
-    [DllImport("libzbar")]
-    private static extern IntPtr zbar_image_get_userdata(IntPtr image);
     #endregion
   }
 }

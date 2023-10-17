@@ -30,6 +30,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using static ZBar.Internal.ImageUtils;
 
 namespace ZBar
 {
@@ -88,7 +89,7 @@ namespace ZBar
 		/// </returns>
 		public List<Symbol> Scan(System.Drawing.Image image){
 			using(Image zimg = new Image(image)){
-				using(Image grey = zimg.Convert(Image.FourCC('Y', '8', '0', '0'))){
+				using(Image grey = zimg.Convert(FourCC('Y', '8', '0', '0'))){
 					this.Scan(grey);
 					return new List<Symbol>(grey.Symbols);
 				}

@@ -170,7 +170,7 @@ namespace ZBar
         throw new ZBarException(_video);
       }
 
-      return new Image(image, false); //I don't think we need to increment reference count here..
+      return new Image(image);
     }
 
     #endregion
