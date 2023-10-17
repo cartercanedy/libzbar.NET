@@ -14,6 +14,8 @@
     <Version>$(AssemblyVersion)</Version>
     <LangVersion>11</LangVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageTags>libzbar;zbar;barcode scanner;barcode</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,7 +42,10 @@
     <None Include="..\LICENSE">
       <PackagePath>.</PackagePath>
       <Pack>true</Pack>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\README.md">
+      <PackagePath>\</PackagePath>
+      <Pack>true</Pack>
     </None>
   </ItemGroup>
 
