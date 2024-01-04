@@ -153,9 +153,110 @@ namespace ZBar.Interop
     [DllImport("libzbar")]
     internal static extern void zbar_image_set_userdata(IntPtr image, IntPtr userdata);
 
-    /// <summary>return user specified data value associated with the image.
+    /// <summary>
+    /// Return user specified data value associated with the image.
     /// </summary>
     [DllImport("libzbar")]
     internal static extern IntPtr zbar_image_get_userdata(IntPtr image);
+    
+    /// <summary>
+    /// Retrieve type of decoded symbol.
+    /// </summary>
+    /// <returns> the symbol type</returns>
+    [DllImport("libzbar")]
+    internal static extern int zbar_symbol_get_type(IntPtr symbol);
+
+    /// <summary>
+    /// Retrieve data decoded from symbol.
+    /// </summary>
+    /// <returns>The data string</returns>
+    [DllImport("libzbar")]
+    internal static extern IntPtr zbar_symbol_get_data(IntPtr symbol);
+
+    /// <summary>
+    /// Retrieve length of binary data.
+    /// </summary>
+    /// <returns>The length of the decoded data</returns>
+    [DllImport("libzbar")]
+    internal static extern uint zbar_symbol_get_data_length(IntPtr symbol);
+
+    /// <summary>
+    /// Retrieve a symbol confidence metric.
+    /// </summary>
+    /// <returns> an unscaled, relative quantity: larger values are better
+    /// than smaller values, where "large" and "small" are application
+    /// dependent.
+    /// </returns>
+    /// <remarks>expect the exact definition of this quantity to change as the
+    /// metric is refined.  currently, only the ordered relationship
+    /// between two values is defined and will remain stable in the future
+    /// </remarks>
+    [DllImport("libzbar")]
+    internal static extern int zbar_symbol_get_quality(IntPtr symbol);
+
+    /// <summary>
+    /// retrieve current cache count.
+    /// </summary>
+    /// <remarks>when the cache is enabled for the
+    /// image_scanner this provides inter-frame reliability and redundancy
+    /// information for video streams.
+    /// </remarks>
+    /// <returns>
+    /// < 0 if symbol is still uncertain.
+    /// 0 if symbol is newly verified.
+    /// > 0 for duplicate symbols
+    /// </returns>
+    [DllImport("libzbar")]
+    internal static extern int zbar_symbol_get_count(IntPtr symbol);
+
+    /// <summary>
+    /// retrieve the number of points in the location polygon.  the
+    /// location polygon defines the image area that the symbol was
+    /// extracted from.
+    /// </summary>
+    /// <returns> the number of points in the location polygon</returns>
+    /// <remarks>this is currently not a polygon, but the scan locations
+    /// where the symbol was decoded</remarks>
+    [DllImport("libzbar")]
+    internal static extern uint zbar_symbol_get_loc_size(IntPtr symbol);
+
+    /// <summary>
+    /// retrieve location polygon x-coordinates.
+    /// points are specified by 0-based index.
+    /// </summary>
+    /// <returns> the x-coordinate for a point in the location polygon.
+    /// -1 if index is out of range</returns>
+    [DllImport("libzbar")]
+    internal static extern int zbar_symbol_get_loc_x(IntPtr symbol, uint index);
+
+    /// <summary>
+    /// retrieve location polygon y-coordinates.
+    /// points are specified by 0-based index.
+    /// </summary>
+    /// <returns> the y-coordinate for a point in the location polygon.
+    ///  -1 if index is out of range</returns>
+    [DllImport("libzbar")]
+    internal static extern int zbar_symbol_get_loc_y(IntPtr symbol, uint index);
+
+    /// <summary>
+    /// iterate the result set.
+    /// </summary>
+    /// <returns> the next result symbol, or
+    /// NULL when no more results are available</returns>
+    /// <remarks>Marked internal because it is used by the symbol iterators.</remarks>
+    [DllImport("libzbar")]
+    internal static extern IntPtr zbar_symbol_next(IntPtr symbol);
+
+    /// <summary>
+    /// print XML symbol element representation to user result buffer.
+    /// </summary>
+    /// <remarks>see http://zbar.sourceforge.net/2008/barcode.xsd for the schema.</remarks>
+    /// <param name="symbol">is the symbol to print</param>
+    /// <param name="buffer"> is the inout result pointer, it will be reallocated
+    /// with a larger size if necessary.</param>
+    /// <param name="buflen">  is inout length of the result buffer.</param>
+    /// <returns> the buffer pointer</returns>
+    [DllImport("libzbar")]
+    internal static extern IntPtr zbar_symbol_xml(IntPtr symbol, out IntPtr buffer, out uint buflen);
   }
 }

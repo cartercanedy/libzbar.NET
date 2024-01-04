@@ -17,9 +17,10 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageTags>libzbar;zbar;barcode scanner;barcode</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Description>
-      A .NET Standard 2.0 wrapper around libzbar.
-    </Description>
+    <Description>A .NET Standard 2.0 wrapper around libzbar.</Description>
+    <PackageProjectUrl>https://github.com/cartercanedy/libzbar.NET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/cartercanedy/libzbar.NET</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,7 +55,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0">
+      <IncludeAssets>all</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 

@@ -35,6 +35,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using static ZBar.Interop.NativeFunctions;
 using static ZBar.Internal.ImageUtils;
+using ZBar.Interop;
 
 namespace ZBar
 {
@@ -62,7 +63,7 @@ namespace ZBar
 
       Marshal.Copy(data, 0, lData, data.Length);
 
-      zbar_image_set_data(_handle, lData, (uint)data.Length, ReleaseAllocatedUnmanagedMemory);
+      zbar_image_set_data(_handle, lData, (uint)data.Length, Release);
     }
 
     /// <summary>
@@ -114,9 +115,9 @@ namespace ZBar
       Byte[] data = new byte[image.Width * image.Height * 3];
 
       //Convert the image to RBG3
-      using (Bitmap bitmap = new Bitmap(image.Width, image.Height, PixelFormat.Format24bppRgb))
+      using (Bitmap bitmap = new(image.Width, image.Height, PixelFormat.Format24bppRgb))
       {
-        using (Graphics g = Graphics.FromImage(bitmap))
+        using (var g = Graphics.FromImage(bitmap))
         {
           g.PageUnit = GraphicsUnit.Pixel;
           g.DrawImageUnscaled(image, 0, 0);
@@ -126,7 +127,7 @@ namespace ZBar
         // This way we don't need to worry about BMP being upside-down when copying to byte array
         bitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
 
-        using MemoryStream ms = new MemoryStream();
+        using MemoryStream ms = new();
         bitmap.Save(ms, ImageFormat.Bmp);
         ms.Seek(54, SeekOrigin.Begin);
         ms.Read(data, 0, data.Length);
@@ -136,7 +137,7 @@ namespace ZBar
       SetData(data);
       Width = (uint)image.Width;
       Height = (uint)image.Height;
-      Format = FourCC('R', 'G', 'B', '3');
+      Format = FourCC("RGB3");
     }
 
     /// <value>
@@ -154,18 +155,13 @@ namespace ZBar
     /// <returns>
     /// A <see cref="Bitmap"/> copy of this image
     /// </returns>
-    public Bitmap ToBitmap(SupportedBitmapFormat pixelFormat)
+    public Bitmap ToBitmap(PixelFormat pixelFormat)
     {
-      Bitmap lBmp = new Bitmap((int)_width, (int)_height, PixelFormat.Format24bppRgb);
+      Bitmap lBmp = new((int)_width, (int)_height, PixelFormat.Format24bppRgb);
       BitmapData lBmpData = lBmp.LockBits(new(0, 0, lBmp.Width, lBmp.Height), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
       //TODO: Test and optimize this :)
 
-      uint l4CC = pixelFormat switch
-      {
-        SupportedBitmapFormat.RGB3 => FourCC('R', 'G', 'B', '3'),
-        SupportedBitmapFormat.RGB4 => FourCC('R', 'G', 'B', '3'),
-        _ => throw new Exception()
-      };
+      uint l4CC = pixelFormat.ToFourCC();
 
       IntPtr pNewImage = ConvertZBarImage(_handle, l4CC);
       IntPtr pNewImageData = zbar_image_get_data(pNewImage);
@@ -263,11 +259,11 @@ namespace ZBar
       {
         IntPtr data = Marshal.AllocHGlobal(value.Length);
         Marshal.Copy(value, 0, data, value.Length);
-        zbar_image_set_data(_handle, data, (uint)value.Length, ReleaseAllocatedUnmanagedMemory);
+        zbar_image_set_data(_handle, data, (uint)value.Length, Release);
       }
     }
 
-    private static void ReleaseAllocatedUnmanagedMemory(IntPtr image)
+    private static void Release(IntPtr image)
     {
       IntPtr pData = zbar_image_get_data(image);
 
@@ -288,7 +284,7 @@ namespace ZBar
         while (pSym != IntPtr.Zero)
         {
           yield return new Symbol(pSym);
-          pSym = Symbol.zbar_symbol_next(pSym);
+          pSym = NativeFunctions.zbar_symbol_next(pSym);
         }
       }
     }
