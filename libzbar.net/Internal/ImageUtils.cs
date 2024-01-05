@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Text;
-using static ZBar.Interop.NativeFunctions;
+using static ZBar.Native.NativeFunctions;
 
 namespace ZBar.Internal
 {

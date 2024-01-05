@@ -27,8 +27,8 @@
 
 using System;
 using System.Runtime.InteropServices;
-using ZBar.Interop;
-using static ZBar.Interop.NativeFunctions;
+using ZBar.Native;
+using static ZBar.Native.NativeFunctions;
 
 namespace ZBar
 {

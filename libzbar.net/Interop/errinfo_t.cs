@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace ZBar.Interop
+namespace ZBar.Native
 {
   internal enum zbar_error_e
   {

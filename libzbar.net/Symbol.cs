@@ -1,7 +1,6 @@
 /*------------------------------------------------------------------------
  *  Copyright 2023 (c) Carter Canedy <cartercanedy42@gmail.com>
  *  Copyright 2009 (c) Jonas Finnemann Jensen <jopsen@gmail.com>
- *  Copyright 2007-2009 (c) Jeff Brown <spadix@users.sourceforge.net>
  * 
  *  This file is part of the libzbar.net .NET Standard 2.1 library.
  *  libzbar.net is not affiliated with the development of libzbar.
@@ -29,171 +28,68 @@
 
 using System;
 using System.Runtime.InteropServices;
-using ZBar.Interop;
-using static ZBar.Interop.NativeFunctions;
+using ZBar.Native;
+using static ZBar.Native.NativeFunctions;
 
 namespace ZBar
 {
   /// <summary>
-  /// Representation of a decoded symbol
+  /// Representation of a decoded symbol. <br/><br/>
+  /// This symbol does not hold any references to unmanaged resources.
   /// </summary>
-  /// <remarks>This symbol does not hold any references to unmanaged resources.</remarks>
   public class Symbol
   {
     /// <summary>
     /// Initialize a symbol from pointer to a symbol
     /// </summary>
     /// <param name="symbol">
-    /// Pointer to a symbol
+    /// Pointer to a symbol_t.
     /// </param>
     internal Symbol(IntPtr symbol)
     {
       if (symbol == IntPtr.Zero)
-        throw new Exception("Can't initialize symbol from null pointer.");
+        throw new NullReferenceException("Can't initialize symbol from null pointer.");
 
       IntPtr pData = zbar_symbol_get_data(symbol);
       int length = (int)zbar_symbol_get_data_length(symbol);
-      data = Marshal.PtrToStringAnsi(pData, length);
-      type = (SymbolType)zbar_symbol_get_type(symbol);
-      quality = zbar_symbol_get_quality(symbol);
-      count = zbar_symbol_get_count(symbol);
+      Data = Marshal.PtrToStringAnsi(pData, length);
+      Type = (SymbolType)zbar_symbol_get_type(symbol);
+      Quality = zbar_symbol_get_quality(symbol);
+      Count = zbar_symbol_get_count(symbol);
     }
 
-    private string data;
-    private int quality;
-    private int count;
-    private SymbolType type;
-
-    public override string ToString()
-    {
-      return type.ToString() + " " + data;
-    }
+    public override string ToString() => $"{ Type } { Data }";
 
     #region Public properties
 
+    /// <summary>
+    /// Retrieve current cache count.<br/>
+    /// When the cache is enabled for the image_scanner, this provides inter-frame reliability and redundancy information for video streams.
+    /// </summary>
     /// <value>
-    /// Retrieve current cache count.
+    /// &lt; 0 if symbol is still uncertain<br/>
+    ///   == 0 if symbol is newly verified<br/>
+    /// &gt; 0 for duplicate symbols
     /// </value>
-    /// <remarks>
-    /// When the cache is enabled for the image_scanner this provides inter-frame reliability and redundancy information for video streams. 
-    /// 	&lt; 0 if symbol is still uncertain.
-    /// 	0 if symbol is newly verified.
-    /// 	&gt; 0 for duplicate symbols 
-    /// </remarks>
-    public int Count { get => count; }
+    public int Count { get; private set; }
 
-    /// <value>
+    /// <summary>
     /// Data decoded from symbol.
-    /// </value>
-    public string Data { get => data; }
+    /// </summary>
+    public string Data { get; private set; }
 
-    /// <value>
+    /// <summary>
     /// Get a symbol confidence metric. 
-    /// </value>
-    /// <remarks>
-    /// An unscaled, relative quantity: larger values are better than smaller values, where "large" and "small" are application dependent.
-    /// </remarks>
-    public int Quality { get => quality; }
-
+    /// </summary>
     /// <value>
-    /// Type of decoded symbol
+    /// An unscaled, relative quantity: larger values are better than smaller values, where "large" and "small" are application dependent.
     /// </value>
-    public SymbolType Type { get => type; }
+    public int Quality { get; private set; }
 
+    /// <summary>
+    /// Type of decoded symbol
+    /// </summary>
+    public SymbolType Type { get; private set; }
     #endregion
-    #region Extern C functions
-    #endregion
-  }
-
-  /// <summary>
-  /// Different symbol types
-  /// </summary>
-  [Flags]
-  public enum SymbolType
-  {
-    /// <summary>
-    /// No symbol decoded
-    /// </summary>
-    None = 0,
-
-    /// <summary>
-    /// Intermediate status
-    /// </summary>
-    Partial = 1,
-
-    /// <summary>
-    /// EAN-8
-    /// </summary>
-    EAN8 = 8,
-
-    /// <summary>
-    /// UPC-E
-    /// </summary>
-    UPCE = 9,
-
-    /// <summary>
-    /// ISBN-10 (from EAN-13)
-    /// </summary>
-    ISBN10 = 10,
-
-    /// <summary>
-    /// UPC-A
-    /// </summary>
-    UPCA = 12,
-
-    /// <summary>
-    /// EAN-13
-    /// </summary>
-    EAN13 = 13,
-
-    /// <summary>
-    /// ISBN-13 (from EAN-13)
-    /// </summary>
-    ISBN13 = 14,
-
-    /// <summary>
-    /// Interleaved 2 of 5.
-    /// </summary>
-    I25 = 25,
-
-    /// <summary>
-    /// Code 39.
-    /// </summary>
-    CODE39 = 39,
-
-    /// <summary>
-    /// PDF417
-    /// </summary>
-    PDF417 = 57,
-
-    /// <summary>
-    /// QR Code
-    /// </summary>
-    QRCODE = 64,
-
-    /// <summary>
-    /// Code 128
-    /// </summary>
-    CODE128 = 128,
-
-    /// <summary>
-    /// mask for base symbol type
-    /// </summary>
-    Symbole = 0x00ff,
-
-    /// <summary>
-    /// 2-digit add-on flag
-    /// </summary>
-    Addon2 = 0x0200,
-
-    /// <summary>
-    /// 5-digit add-on flag
-    /// </summary>
-    Addon5 = 0x0500,
-
-    /// <summary>
-    /// add-on flag mask
-    /// </summary>
-    Addon = 0x0700
   }
 }

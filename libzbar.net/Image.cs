@@ -1,7 +1,6 @@
 /*------------------------------------------------------------------------
  *  Copyright 2023 (c) Carter Canedy <cartercanedy42@gmail.com>
  *  Copyright 2009 (c) Jonas Finnemann Jensen <jopsen@gmail.com>
- *  Copyright 2007-2009 (c) Jeff Brown <spadix@users.sourceforge.net>
  * 
  *  This file is part of the libzbar.net .NET Standard 2.1 library.
  *  libzbar.net is not affiliated with the development of libzbar.
@@ -33,9 +32,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using static ZBar.Interop.NativeFunctions;
+using static ZBar.Native.NativeFunctions;
 using static ZBar.Internal.ImageUtils;
-using ZBar.Interop;
+using ZBar.Native;
 
 namespace ZBar
 {

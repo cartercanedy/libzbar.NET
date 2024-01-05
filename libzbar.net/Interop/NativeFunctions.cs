@@ -1,262 +1,331 @@
-﻿using System.Runtime.InteropServices;
-using System;
-using static ZBar.Image;
+﻿/*------------------------------------------------------------------------
+ *  Copyright 2023 (c) Carter Canedy <cartercanedy42@gmail.com>
+ * 
+ *  This file is part of the libzbar.net .NET Standard 2.1 library.
+ *  libzbar.net is not affiliated with the development of libzbar.
+ *  This project was derived directly from the zbar-sharp project
+ *  (https://github.com/jonasfj/zbar-sharp), first implemented by Jonas
+ *  Finneman Jenson <jopsen@gmail.com> et. al. initially released in
+ *  2009.
+ *
+ *  libzbar.net is free software; you can redistribute it
+ *  and/or modify it under the terms of the GNU Lesser Public License as
+ *  published by the Free Software Foundation; either version 2.1 of
+ *  the License, or (at your option) any later version.
+ *
+ *  libzbar.net is distributed in the hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ *  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser Public License
+ *  along with any distribution of libzbar.net; if not, write to the
+ *  Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ *  Boston, MA  02110-1301  USA
+ * 
+ *------------------------------------------------------------------------*/
 
-namespace ZBar.Interop
+using System.Runtime.InteropServices;
+using System;
+
+namespace ZBar.Native
 {
   internal static class NativeFunctions
   {
     [DllImport("libzbar")]
-    internal static extern int zbar_version(ref uint major, ref uint minor);
+    public static extern int zbar_version(ref uint major, ref uint minor);
 
     [DllImport("libzbar")]
-    internal static unsafe extern IntPtr _zbar_error_string(errinfo_t* errorInfo, int verbosity);
+    public static unsafe extern IntPtr _zbar_error_string(errinfo_t* errorInfo, int verbosity);
 
-    /// <summary>new image constructor.
+    /// <summary>
+    /// Constructs a zbar image.
     /// </summary>
     /// <returns>
-    /// a new image object with uninitialized data and format.
-    /// this image should be destroyed (using zbar_image_destroy()) as
-    /// soon as the application is finished with it
+    /// An unitialized and unmanaged reference to a zbar image.<br/>
     /// </returns>
-    [DllImport("libzbar")]
-    internal static extern IntPtr zbar_image_create();
-
-    /// <summary>image destructor.  all images created by or returned to the
-    /// application should be destroyed using this function.  when an image
-    /// is destroyed, the associated data cleanup handler will be invoked
-    /// if available
-    /// </summary><remarks>
-    /// make no assumptions about the image or the data buffer.
-    /// they may not be destroyed/cleaned immediately if the library
-    /// is still using them.  if necessary, use the cleanup handler hook
-    /// to keep track of image data buffers
+    /// <remarks>
+    /// WARNING: UNMANAGED RESOURCE CREATION<br/>
+    /// Use <see cref="zbar_image_destroy(IntPtr)"/> to ensure resources are properly released.
     /// </remarks>
     [DllImport("libzbar")]
-    internal static extern void zbar_image_destroy(IntPtr image);
-
-    /// <summary>image reference count manipulation.
-    /// increment the reference count when you store a new reference to the
-    /// image.  decrement when the reference is no longer used.  do not
-    /// refer to the image any longer once the count is decremented.
-    /// zbar_image_ref(image, -1) is the same as zbar_image_destroy(image)
-    /// </summary>
-    [DllImport("libzbar")]
-    internal static extern void zbar_image_ref(IntPtr image, int refs);
-
-    /// <summary>image format conversion.  refer to the documentation for supported
-    /// image formats
-    /// </summary>
-    /// <returns> a new image with the sample data from the original image
-    /// converted to the requested format.  the original image is
-    /// unaffected.
-    /// </returns>
-    /// <remarks> the converted image size may be rounded (up) due to format
-    /// constraints
-    /// </remarks>
-    [DllImport("libzbar")]
-    internal static extern IntPtr zbar_image_convert(IntPtr image, uint format);
-
-    /// <summary>image format conversion with crop/pad.
-    /// if the requested size is larger than the image, the last row/column
-    /// are duplicated to cover the difference.  if the requested size is
-    /// smaller than the image, the extra rows/columns are dropped from the
-    /// right/bottom.
-    /// </summary>
-    /// <returns> a new image with the sample data from the original
-    /// image converted to the requested format and size.
-    /// </returns>
-    /// <remarks>the image is not scaled</remarks>
-    [DllImport("libzbar")]
-    internal static extern IntPtr zbar_image_convert_resize(IntPtr image, uint format, uint width, uint height);
-
-    /// <summary>retrieve the image format.
-    /// </summary>
-    /// <returns> the fourcc describing the format of the image sample data</returns>
-    [DllImport("libzbar")]
-    internal static extern uint zbar_image_get_format(IntPtr image);
-
-    /// <summary>retrieve a "sequence" (page/frame) number associated with this image.
-    /// </summary>
-    [DllImport("libzbar")]
-    internal static extern uint zbar_image_get_sequence(IntPtr image);
-
-    /// <summary>retrieve the width of the image.
-    /// </summary>
-    /// <returns> the width in sample columns</returns>
-    [DllImport("libzbar")]
-    internal static extern uint zbar_image_get_width(IntPtr image);
-
-    /// <summary>retrieve the height of the image.
-    /// </summary>
-    /// <returns> the height in sample rows</returns>
-    [DllImport("libzbar")]
-    internal static extern uint zbar_image_get_height(IntPtr image);
-
-    /// <summary>return the image sample data.  the returned data buffer is only
-    /// valid until zbar_image_destroy() is called
-    /// </summary>
-    [DllImport("libzbar")]
-    internal static extern IntPtr zbar_image_get_data(IntPtr image);
-
-    /// <summary>return the size of image data.
-    /// </summary>
-    [DllImport("libzbar")]
-    internal static extern uint zbar_image_get_data_length(IntPtr img);
-
-    /// <summary>image_scanner decode result iterator.
-    /// </summary>
-    /// <returns> the first decoded symbol result for an image
-    /// or NULL if no results are available
-    /// </returns>
-    [DllImport("libzbar")]
-    internal static extern IntPtr zbar_image_first_symbol(IntPtr image);
-
-    /// <summary>specify the fourcc image format code for image sample data.
-    /// refer to the documentation for supported formats.
-    /// </summary>
-    /// <remarks> this does not convert the data!
-    /// (see zbar_image_convert() for that)
-    /// </remarks>
-    [DllImport("libzbar")]
-    internal static extern void zbar_image_set_format(IntPtr image, uint format);
-
-    /// <summary>associate a "sequence" (page/frame) number with this image.
-    /// </summary>
-    [DllImport("libzbar")]
-    internal static extern void zbar_image_set_sequence(IntPtr image, uint sequence_num);
-
-    /// <summary>specify the pixel size of the image.
-    /// </summary>
-    /// <remarks>this does not affect the data!</remarks>
-    [DllImport("libzbar")]
-    internal static extern void zbar_image_set_size(IntPtr image, uint width, uint height);
-
-    internal delegate void CleanupCallback(IntPtr image);
-
-    /// <summary>specify image sample data.  when image data is no longer needed by
-    /// the library the specific data cleanup handler will be called
-    /// (unless NULL)
-    /// </summary>
-    /// <remarks>application image data will not be modified by the library</remarks>
-    [DllImport("libzbar")]
-    internal static extern void zbar_image_set_data(IntPtr image, IntPtr data, uint data_byte_length, CleanupCallback cleanupCallback);
-
-    /// <summary>built-in cleanup handler.
-    /// passes the image data buffer to free()
-    /// </summary>
-    [DllImport("libzbar")]
-    internal static extern void zbar_image_free_data(IntPtr image);
-
-    /// <summary>associate user specified data value with an image.
-    /// </summary>
-    [DllImport("libzbar")]
-    internal static extern void zbar_image_set_userdata(IntPtr image, IntPtr userdata);
+    public static extern IntPtr zbar_image_create();
 
     /// <summary>
-    /// Return user specified data value associated with the image.
+    /// Marks the referenced image instance for release and invalidates all remaining references to the specified image and it's resources.<br/>
+    /// All images should be destroyed using this function.<br/>
+    /// When an image is destroyed, the associated data cleanup handler will be invoked, if available.
+    /// </summary>
+    /// <remarks>
+    /// Make no assumptions about the image or the data buffer.<br/>
+    /// They may not be destroyed/cleaned immediately if the library is still using them.<br/>
+    /// If necessary, use the cleanup handler hook to keep track of image data buffers
+    /// </remarks>
+    [DllImport("libzbar")]
+    public static extern void zbar_image_destroy(IntPtr image);
+
+    /// <summary>
+    /// Used for direct reference count manipulation.
+    /// Increment the reference count when you store a new reference to the
+    /// image. Decrement when the reference is no longer used. Do not
+    /// refer to the image any longer once the count is decremented.
+    /// </summary>
+    /// <remarks>
+    /// Calling this function with <paramref name="refs"/> set to -1 has the same effect as calling <see cref="zbar_image_destroy(IntPtr)"/>.
+    /// </remarks>
+    [DllImport("libzbar")]
+    public static extern void zbar_image_ref(IntPtr image, int refs);
+
+    /// <summary>
+    /// Converts image data format into specified format. Refer to documentation for supported image formats
+    /// </summary>
+    /// <returns>
+    /// A new image with data from the provided image converted into the requested format. 
+    /// </returns>
+    /// <remarks>
+    /// The converted image size may be rounded (up) due to format constraints.<br/>
+    /// The original image data is unaffected.
+    /// </remarks>
+    [DllImport("libzbar")]
+    public static extern IntPtr zbar_image_convert(IntPtr image, uint format);
+
+    /// <summary>
+    /// Image format conversion with crop/pad.<br/><br/>
+    /// If the requested size is larger than the image, the last row/column are duplicated to cover the difference.<br/>
+    /// If the requested size is smaller than the image, the extra rows/columns are dropped from the right/bottom.<br/>
+    /// </summary>
+    /// <returns>
+    /// A new image with the sample data from the original image converted to the requested format and size.
+    /// </returns>
+    /// <remarks>
+    /// The image is not scaled
+    /// </remarks>
+    [DllImport("libzbar")]
+    public static extern IntPtr zbar_image_convert_resize(IntPtr image, uint format, uint width, uint height);
+
+    /// <summary>
+    /// Retrieves the format of the image data.
+    /// </summary>
+    /// <returns>
+    /// The FourCC describing the format of the image sample data.
+    /// </returns>
+    [DllImport("libzbar")]
+    public static extern uint zbar_image_get_format(IntPtr image);
+
+    /// <summary>
+    /// Retrieve a "sequence" (page/frame) number associated with this image.
     /// </summary>
     [DllImport("libzbar")]
-    internal static extern IntPtr zbar_image_get_userdata(IntPtr image);
+    public static extern uint zbar_image_get_sequence(IntPtr image);
+
+    /// <summary>
+    /// Retrieve the width of the image.
+    /// </summary>
+    /// <returns>
+    /// The width in sample columns.
+    /// </returns>
+    [DllImport("libzbar")]
+    public static extern uint zbar_image_get_width(IntPtr image);
+
+    /// <summary>
+    /// Retrieve the height of the image.
+    /// </summary>
+    /// <returns>
+    /// The height in sample rows
+    /// </returns>
+    [DllImport("libzbar")]
+    public static extern uint zbar_image_get_height(IntPtr image);
+
+    /// <summary>
+    /// Gets a pointer the image data buffer.<br/>
+    /// </summary>
+    /// <remarks>
+    /// The lifetime of the buffer is tied to the image it came from. See <see cref="zbar_image_destroy(IntPtr)"/>.
+    /// </remarks>
+    [DllImport("libzbar")]
+    public static extern IntPtr zbar_image_get_data(IntPtr image);
+
+    /// <summary>
+    /// Gets the size of the image data buffer held by a zbar image_t.
+    /// </summary>
+    /// <returns>
+    /// The size of the data buffer in bytes
+    /// </returns>
+    [DllImport("libzbar")]
+    public static extern uint zbar_image_get_data_length(IntPtr img);
+
+    /// <summary>
+    /// Image_scanner decode result iterator.
+    /// </summary>
+    /// <returns>
+    /// The first decoded symbol result for an image, or <see cref="IntPtr.Zero"/> if no results are available.
+    /// </returns>
+    [DllImport("libzbar")]
+    public static extern IntPtr zbar_image_first_symbol(IntPtr image);
+
+    /// <summary>
+    /// Specify the fourcc image format code for image sample data.<br/>
+    /// Refer to documentation for supported formats.
+    /// </summary>
+    /// <remarks>
+    /// This does not convert image data (see <see cref="zbar_image_convert(IntPtr, uint)"/> for conversion)
+    /// </remarks>
+    [DllImport("libzbar")]
+    public static extern void zbar_image_set_format(IntPtr image, uint format);
+
+    /// <summary>
+    /// Associate a sequence number with this image.
+    /// </summary>
+    [DllImport("libzbar")]
+    public static extern void zbar_image_set_sequence(IntPtr image, uint sequence_num);
+
+    /// <summary>
+    /// Specify the pixel size of the image.
+    /// </summary>
+    /// <remarks>
+    /// This does not affect image data.
+    /// </remarks>
+    [DllImport("libzbar")]
+    public static extern void zbar_image_set_size(IntPtr image, uint width, uint height);
+
+    public delegate void CleanupCallback(IntPtr image);
+
+    /// <summary>
+    /// Sets the image data associated with an instance of an image. When image data is no longer needed by the library the specific data cleanup handler will be called.
+    /// </summary>
+    /// <remarks>
+    /// Provided image data will not be modified unless
+    /// <see cref="zbar_image_convert(IntPtr, uint)"/> or
+    /// <see cref="zbar_image_convert_resize(IntPtr, uint, uint, uint)"/> is called.
+    /// </remarks>
+    [DllImport("libzbar")]
+    public static extern void zbar_image_set_data(IntPtr image, IntPtr data, uint data_byte_length, CleanupCallback cleanupCallback);
+
+    /// <summary>
+    /// Built-in cleanup handler.
+    /// </summary>
+    [DllImport("libzbar")]
+    public static extern void zbar_image_free_data(IntPtr image);
+
+    /// <summary>
+    /// Associates arbitrary user-specified data value with an instance of an image.
+    /// </summary>
+    [DllImport("libzbar")]
+    public static extern void zbar_image_set_userdata(IntPtr image, IntPtr userdata);
+
+    /// <summary>
+    /// Retrieves any user-specified data value associated with the image instance.
+    /// </summary>
+    [DllImport("libzbar")]
+    public static extern IntPtr zbar_image_get_userdata(IntPtr image);
     
     /// <summary>
-    /// Retrieve type of decoded symbol.
+    /// Retrieve the type/specification of decoded symbol.
     /// </summary>
-    /// <returns> the symbol type</returns>
+    /// <returns>
+    /// An enumeration represented by <see cref="SymbolType"/>.
+    /// </returns>
     [DllImport("libzbar")]
-    internal static extern int zbar_symbol_get_type(IntPtr symbol);
+    public static extern int zbar_symbol_get_type(IntPtr symbol);
 
     /// <summary>
     /// Retrieve data decoded from symbol.
     /// </summary>
-    /// <returns>The data string</returns>
+    /// <returns>
+    /// The decoded data.
+    /// </returns>
     [DllImport("libzbar")]
-    internal static extern IntPtr zbar_symbol_get_data(IntPtr symbol);
+    public static extern IntPtr zbar_symbol_get_data(IntPtr symbol);
 
     /// <summary>
     /// Retrieve length of binary data.
     /// </summary>
-    /// <returns>The length of the decoded data</returns>
+    /// <returns>
+    /// The length of the decoded data
+    /// </returns>
     [DllImport("libzbar")]
-    internal static extern uint zbar_symbol_get_data_length(IntPtr symbol);
+    public static extern uint zbar_symbol_get_data_length(IntPtr symbol);
 
     /// <summary>
     /// Retrieve a symbol confidence metric.
     /// </summary>
-    /// <returns> an unscaled, relative quantity: larger values are better
-    /// than smaller values, where "large" and "small" are application
-    /// dependent.
+    /// <returns>
+    /// An unscaled, relative metric.
     /// </returns>
-    /// <remarks>expect the exact definition of this quantity to change as the
-    /// metric is refined.  currently, only the ordered relationship
-    /// between two values is defined and will remain stable in the future
+    /// <remarks>
+    /// The ordered relationship between two values is defined and will remain stable.
     /// </remarks>
     [DllImport("libzbar")]
-    internal static extern int zbar_symbol_get_quality(IntPtr symbol);
+    public static extern int zbar_symbol_get_quality(IntPtr symbol);
 
     /// <summary>
-    /// retrieve current cache count.
+    /// Retrieve current cache count.
     /// </summary>
-    /// <remarks>when the cache is enabled for the
-    /// image_scanner this provides inter-frame reliability and redundancy
-    /// information for video streams.
+    /// <remarks>
+    /// When caching is enabled for image_scanner, this provides inter-frame reliability and redundancy information for video streams.
     /// </remarks>
     /// <returns>
-    /// < 0 if symbol is still uncertain.
-    /// 0 if symbol is newly verified.
-    /// > 0 for duplicate symbols
+    /// &lt; 0 if symbol is still uncertain<br/>
+    /// 0 if symbol is newly verified<br/>
+    /// &gt; 0 for duplicate symbols<br/>
     /// </returns>
     [DllImport("libzbar")]
-    internal static extern int zbar_symbol_get_count(IntPtr symbol);
+    public static extern int zbar_symbol_get_count(IntPtr symbol);
 
     /// <summary>
-    /// retrieve the number of points in the location polygon.  the
-    /// location polygon defines the image area that the symbol was
-    /// extracted from.
+    /// Retrieve the number of points in the location polygon. The location polygon defines the image area that the symbol was extracted from.
     /// </summary>
-    /// <returns> the number of points in the location polygon</returns>
-    /// <remarks>this is currently not a polygon, but the scan locations
-    /// where the symbol was decoded</remarks>
+    /// <returns>
+    /// The number of points in the location polygon.
+    /// </returns>
+    /// <remarks>
+    /// This is currently not a polygon, but the scan locations where the symbol was decoded.
+    /// </remarks>
     [DllImport("libzbar")]
-    internal static extern uint zbar_symbol_get_loc_size(IntPtr symbol);
+    public static extern uint zbar_symbol_get_loc_size(IntPtr symbol);
 
     /// <summary>
-    /// retrieve location polygon x-coordinates.
-    /// points are specified by 0-based index.
+    /// Retrieve location polygon x-coordinates. Points are specified by 0-based index.
     /// </summary>
-    /// <returns> the x-coordinate for a point in the location polygon.
-    /// -1 if index is out of range</returns>
+    /// <returns>
+    /// The x-coordinate for a point in the location polygon, or -1 if index is out of range.
+    /// </returns>
     [DllImport("libzbar")]
-    internal static extern int zbar_symbol_get_loc_x(IntPtr symbol, uint index);
+    public static extern int zbar_symbol_get_loc_x(IntPtr symbol, uint index);
 
     /// <summary>
-    /// retrieve location polygon y-coordinates.
-    /// points are specified by 0-based index.
+    /// Retrieve location polygon y-coordinates. Points are specified by 0-based index.
     /// </summary>
-    /// <returns> the y-coordinate for a point in the location polygon.
-    ///  -1 if index is out of range</returns>
+    /// <returns> 
+    /// The y-coordinate for a point in the location polygon, or -1 if index is out of range.
+    /// </returns>
     [DllImport("libzbar")]
-    internal static extern int zbar_symbol_get_loc_y(IntPtr symbol, uint index);
+    public static extern int zbar_symbol_get_loc_y(IntPtr symbol, uint index);
 
     /// <summary>
-    /// iterate the result set.
+    /// Return the next symbol in the iterator sequence.
     /// </summary>
-    /// <returns> the next result symbol, or
-    /// NULL when no more results are available</returns>
-    /// <remarks>Marked internal because it is used by the symbol iterators.</remarks>
+    /// <returns>
+    /// The next result symbol, or <see cref="IntPtr.Zero"/> when no more results are available.
+    /// </returns>
     [DllImport("libzbar")]
-    internal static extern IntPtr zbar_symbol_next(IntPtr symbol);
+    public static extern IntPtr zbar_symbol_next(IntPtr symbol);
 
     /// <summary>
-    /// print XML symbol element representation to user result buffer.
+    /// Gets an XML representation to copied into a user-provided string buffer.<br/><br/>
+    /// Requires a reference to an already allocated span of memory, <paramref name="buffer"/>, with specified length <paramref name="buflen"/>.<br/>
+    /// If the buffer size is insufficient, the buffer may be realloc'ed as needed.
     /// </summary>
-    /// <remarks>see http://zbar.sourceforge.net/2008/barcode.xsd for the schema.</remarks>
-    /// <param name="symbol">is the symbol to print</param>
-    /// <param name="buffer"> is the inout result pointer, it will be reallocated
-    /// with a larger size if necessary.</param>
-    /// <param name="buflen">  is inout length of the result buffer.</param>
-    /// <returns> the buffer pointer</returns>
+    /// <remarks>
+    /// See <see href="http://zbar.sourceforge.net/2008/barcode.xsd"/> for schema.
+    /// </remarks>
+    /// <param name="symbol"> Symbol handle.</param>
+    /// <param name="buffer"> InOut handle to a span of memory.</param>
+    /// <param name="buflen"> InOut length of the provided buffer.</param>
+    /// <returns>
+    /// The handle to the buffer pointed at by <paramref name="buffer"/> with length <paramref name="buflen"/>.
+    /// </returns>
     [DllImport("libzbar")]
-    internal static extern IntPtr zbar_symbol_xml(IntPtr symbol, out IntPtr buffer, out uint buflen);
+    public static extern IntPtr zbar_symbol_xml(IntPtr symbol, ref IntPtr buffer, ref uint buflen);
   }
 }
